@@ -65,7 +65,7 @@ void draw_polygons( struct matrix *polygons, screen s, color c ) {
 	  ny = az*bx-ax*bz;
 	  nz = ax*by-bx*ay;
 	  dot = nx*0+ny*0+nz*-1;
-	  if (dot>0){
+	  if (dot<0){
 	  draw_line(polygons->m[0][i],polygons->m[1][i],polygons->m[0][i+1],polygons->m[1][i+1],s,c);
 	  draw_line(polygons->m[0][i+1],polygons->m[1][i+1],polygons->m[0][i+2],polygons->m[1][i+2],s,c);
 	  draw_line(polygons->m[0][i+2],polygons->m[1][i+2],polygons->m[0][i],polygons->m[1][i],s,c);
@@ -105,8 +105,8 @@ void add_sphere( struct matrix * points,
     for(j=0;j<j2;j++){
       k = i*n+j;
       
-    add_polygon(points,pts->m[0][k],pts->m[1][k],pts->m[2][k],pts->m[0][k+n],pts->m[1][k+n],pts->m[2][k+n],pts->m[0][k+n+1],pts->m[1][k+n+1],pts->m[2][k+n+1]);
-    add_polygon(points,pts->m[0][k],pts->m[1][k],pts->m[2][k],pts->m[0][k+n+1],pts->m[1][k+n+1],pts->m[2][k+n+1],pts->m[0][k+1],pts->m[1][k+1],pts->m[2][k+1]);
+      add_polygon(points,pts->m[0][k],pts->m[1][k],pts->m[2][k],pts->m[0][k+n+1],pts->m[1][k+n+1],pts->m[2][k+n+1],pts->m[0][k+n],pts->m[1][k+n],pts->m[2][k+n]);
+      add_polygon(points,pts->m[0][k],pts->m[1][k],pts->m[2][k],pts->m[0][k+1],pts->m[1][k+1],pts->m[2][k+1],pts->m[0][k+n+1],pts->m[1][k+n+1],pts->m[2][k+n+1]);
     }
   }
   free_matrix(pts);
@@ -238,21 +238,79 @@ void generate_torus( struct matrix * points,
 
   jdyrlandweaver
   ====================*/
-void add_box( struct matrix * points,
+void add_box( struct matrix * polygons,
 	      double x, double y, double z,
 	      double width, double height, double depth ) {
-  add_polygon(points,x,y,z,x,y-height,z,x+width,y,z);
-  add_polygon(points,x+width,y-height,z,x+width,y,z,x,y-height,z);
-  add_polygon(points,x+width,y,z+depth,x+width,y-height,z+depth,x,y,z+depth);
-  add_polygon(points,x,y-height,z+depth,x,y,z+depth,x+width,y-height,z+depth);
-  add_polygon(points,x,y,z+depth,x,y,z,x+width,y,z+depth);
-  add_polygon(points,x+width,y,z,x+width,y,z+depth,x,y,z);
-  add_polygon(points,x+width,y-height,z+depth,x+width,y-height,z,x,y-height,z+depth);
-  add_polygon(points,x,y-height,z,x,y-height,z+depth,x+width,y-height,z);
-  add_polygon(points,x,y,z+depth,x,y-height,z+depth,x,y,z);
-  add_polygon(points,x,y-height,z,x,y,z,x,y-height,z+depth);
-  add_polygon(points,x+width,y,z,x+width,y-height,z,x+width,y,z+depth);
-  add_polygon(points,x+width,y-height,z+depth,x+width,y,z+depth,x+width,y-height,z);
+  double x2, y2, z2;
+  x2 = x + width;
+  y2 = y - height;
+  z2 = z - depth;
+  //front
+  add_polygon( polygons, 
+	       x, y, z, 
+	       x, y2, z,
+	       x2, y2, z);
+  add_polygon( polygons, 
+	       x2, y2, z, 
+	       x2, y, z,
+	       x, y, z);
+  //back
+  add_polygon( polygons, 
+	       x2, y, z2, 
+	       x2, y2, z2,
+	       x, y2, z2);
+  add_polygon( polygons, 
+	       x, y2, z2, 
+	       x, y, z2,
+	       x2, y, z2);
+  //top
+  add_polygon( polygons, 
+	       x, y, z2, 
+	       x, y, z,
+	       x2, y, z);
+  add_polygon( polygons, 
+	       x2, y, z, 
+	       x2, y, z2,
+	       x, y, z2);
+  //bottom
+  add_polygon( polygons, 
+	       x2, y2, z2, 
+	       x2, y2, z,
+	       x, y2, z);
+  add_polygon( polygons, 
+	       x, y2, z, 
+	       x, y2, z2,
+	       x2, y2, z2);
+  //right side
+  add_polygon( polygons, 
+	       x2, y, z, 
+	       x2, y2, z,
+	       x2, y2, z2);
+  add_polygon( polygons, 
+	       x2, y2, z2, 
+	       x2, y, z2,
+	       x2, y, z);
+  //left side
+  add_polygon( polygons, 
+	       x, y, z2, 
+	       x, y2, z2,
+	       x, y2, z);
+  add_polygon( polygons, 
+	       x, y2, z, 
+	       x, y, z,
+	       x, y, z2); 
+  /**add_polygon(points,x,y,z,x,y-height,z,x+width,y-height,z);
+  add_polygon(points,x+width,y-height,z,x+width,y,z,x,y,z);
+  add_polygon(points,x+width,y,z-depth,x+width,y-height,z-depth,x,y-height,z-depth);
+  add_polygon(points,x,y-height,z-depth,x,y,z-depth,x+width,y,z-depth);
+  add_polygon(points,x,y,z-depth,x,y,z,x+width,y,z);
+  add_polygon(points,x+width,y,z,x+width,y,z-depth,x,y,z-depth);
+  add_polygon(points,x+width,y-height,z-depth,x+width,y-height,z,x,y-height,z);
+  add_polygon(points,x,y-height,z,x,y-height,z-depth,x+width,y-height,z-depth);
+  add_polygon(points,x,y,z-depth,x,y-height,z-depth,x,y-height,z);
+  add_polygon(points,x,y-height,z,x,y,z,x,y,z-depth);
+  add_polygon(points,x+width,y,z,x+width,y-height,z,x+width,y-height,z-depth);
+  add_polygon(points,x+width,y-height,z-depth,x+width,y,z-depth,x+width,y,z);**/
   
 }
 

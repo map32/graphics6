@@ -11,16 +11,13 @@
 int main( int argc, char **argv ) {
 
   screen s;
-  struct matrix *a;
-  struct matrix *b;
+  struct matrix *tr;
+  struct matrix *pm = new_matrix(4,100);
   
   if ( argc == 2 )
-    parse_file( argv[1],a,b, s );
+    parse_file( argv[1],tr,pm, s );
   else
-    parse_file( "stdin",a,b, s );
-
-  free_matrix(a);
-  free_matrix(b);
+    parse_file( "stdin",tr,pm, s );
   
   return 0;
   

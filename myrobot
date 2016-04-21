@@ -14,8 +14,11 @@ box
 0 0 0 200 25 25
 pop
 zrotate
+30
 translate
-80 0 0
+50 0 0
+box
+0 0 0 200 25 25
 pop
 display
 quit

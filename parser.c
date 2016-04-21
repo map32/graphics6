@@ -76,20 +76,18 @@ humans use degrees, so the file will contain degrees for rotations,
 be sure to conver those degrees to radians (M_PI is the constant
 for PI)
 ====================*/
-void parse_file ( char * filename, struct matrix *transform, struct matrix *p,
+void parse_file ( char * filename, struct matrix *transform, struct matrix *pm,
                   screen s) {
 
   FILE *f;
   char line[256];
   double args[8];
   int type = -1;
-  struct matrix *pm = new_matrix(4,100);
   struct stack * stek = new_stack();
   color c;
   c.red = 0;
   c.blue= 0;
   c.green=0;
-  srand((unsigned)time(NULL));
   
   clear_screen(s);
 
@@ -124,8 +122,6 @@ void parse_file ( char * filename, struct matrix *transform, struct matrix *p,
     } else if (strcmp(line, "apply")==0){
       matrix_mult(stek->data[stek->top],pm);
     } else if (strcmp(line, "display")==0){
-      matrix_mult(stek->data[stek->top],pm);
-      draw_polygons(pm,s,c);
       display(s);
     } else if (strcmp(line, "save")==0){
       type = 9;
@@ -138,14 +134,8 @@ void parse_file ( char * filename, struct matrix *transform, struct matrix *p,
     } else if (strcmp(line, "torus")==0){
       type = 13;
     } else if (strcmp(line, "pop")==0){
-      if (pm->lastcol != 0){
-	pm->lastcol = 0;
-      }
       pop(stek);
     } else if (strcmp(line, "push")==0){
-      if (pm->lastcol != 0){
-	pm->lastcol = 0;
-      }
       push(stek);
     } else if (strcmp(line, "quit")==0){
       break;
@@ -154,35 +144,53 @@ void parse_file ( char * filename, struct matrix *transform, struct matrix *p,
       readargs(line,args);
       switch (type){
       case 0:
-	matrix_mult(stek->data[stek->top],pm);
 	add_edge(pm,args[0],args[1],args[2],args[3],args[4],args[5]);
+	matrix_mult(stek->data[stek->top],pm);
+	draw_lines(pm,s,c);
+	pm->lastcol = 0;
 	break;
       case 1:
-	matrix_mult(stek->data[stek->top],pm);
 	add_circle(pm,args[0],args[1],args[2],0.01);
+	matrix_mult(stek->data[stek->top],pm);
+	draw_lines(pm,s,c);
+	pm->lastcol = 0;
         break;
       case 2:
+	add_curve(pm,args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],0.01,0);	
 	matrix_mult(stek->data[stek->top],pm);
-	add_curve(pm,args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],0.01,0);
+	draw_lines(pm,s,c);
+	pm->lastcol = 0;
         break;
       case 3:
-	matrix_mult(stek->data[stek->top],pm);
 	add_curve(pm,args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],0.01,1);
+	matrix_mult(stek->data[stek->top],pm);
+	draw_lines(pm,s,c);
+	pm->lastcol = 0;
         break;
       case 4:
-	matrix_mult(make_scale(args[0],args[1],args[2]),stek->data[stek->top]);
-        break;
+	transform = make_scale(args[0],args[1],args[2]);
+	matrix_mult(stek->data[stek->top],transform);
+	copy_matrix(transform,stek->data[stek->top]);
+	break;
       case 5:
-	matrix_mult(make_translate(args[0],args[1],args[2]),stek->data[stek->top]);
-        break;
+        transform = make_translate(args[0],args[1],args[2]);
+        matrix_mult(stek->data[stek->top],transform);
+        copy_matrix(transform,stek->data[stek->top]);
+	break;
       case 6:
-	matrix_mult(make_rotX(args[0]/180.*M_PI),stek->data[stek->top]);
+	transform = make_rotX(args[0]/180.*M_PI);
+	matrix_mult(stek->data[stek->top],transform);
+        copy_matrix(transform,stek->data[stek->top]);
         break;
       case 7:
-	matrix_mult(make_rotY(args[0]/180.*M_PI),stek->data[stek->top]);
+	transform = make_rotY(args[0]/180.*M_PI);
+	matrix_mult(stek->data[stek->top],transform);
+        copy_matrix(transform,stek->data[stek->top]);
 	break;
       case 8:
-	matrix_mult(make_rotZ(args[0]/180.*M_PI),stek->data[stek->top]);
+	transform = make_rotZ(args[0]/180.*M_PI);
+	matrix_mult(stek->data[stek->top],transform);
+        copy_matrix(transform,stek->data[stek->top]);
 	break;
       case 9:
 	matrix_mult(stek->data[stek->top],pm);
@@ -202,9 +210,6 @@ void parse_file ( char * filename, struct matrix *transform, struct matrix *p,
 	pm->lastcol = 0;
 	break;
       case 13:
-	c.red = (rand()&156)+100;
-	c.blue= rand()%120;
-	c.green=(rand()%156)+20;
         add_torus(pm,args[0],args[1],args[2],args[3],0.05);
 	matrix_mult(stek->data[stek->top],pm);
 	draw_polygons(pm,s,c);
@@ -217,6 +222,7 @@ void parse_file ( char * filename, struct matrix *transform, struct matrix *p,
     }
   }
   free_matrix(pm);
+  free_matrix(transform);
   free_stack(stek);
   fclose(f);
 }
